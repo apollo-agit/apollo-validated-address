@@ -1,8 +1,13 @@
 <!doctype html>
+
 <link rel="import" href="/bower_components/paper-input/paper-input.html">
 <link rel="import" href="/bower_components/iron-validator-behavior/iron-validator-behavior.html">
+<link rel="import" href="/bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="/bower_components/iron-dropdown/iron-dropdown.html">
+<link rel="import" href="apollo-address-validator.html">
+<link rel="import" href="apollo-countries-dropdown.html">
 
-<link rel="import" href="countries-dropdown.html">
+
 
 <!--
 `apollo-validated-address`
@@ -11,64 +16,85 @@ Polymer component that validates the entered address
 @demo demo/index.html
 -->
 
-<dom-module id="apollo-validated-address">
-    <template>        
+<dom-module id="apollo-validated-address" id="Address">
+    <template>
 
-        <paper-input id="addressLine1" auto-validate required pattern="[-\sa-zA-Z0-9 ]{1,60}" error-message="{{addressline1error}}" name="addressLine1" label="Address Line1" class="reg" 
-        bind-value="{{addressLine1}}"></paper-input>
+        <apollo-address-validator></apollo-address-validator>
+
+        <paper-input id="search" auto-validate validator="apollo-address-validator" name="search" label="Address Search" bind-value="{{searched}}"></paper-input>
+
+         
+                <ul class="dropdown-content" tabindex="0">
+                <template is="dom-repeat" items="[[foundAddress]]">
+                    <li><a href="javascript:void(0)">[[item.city]]</a></li>
+                </template>
+          </ul>
+        
+
+
+        <paper-input id="addressLine1" name="addressLine1" label="Address Line1" bind-value="{{addressLine1}}"></paper-input>
 
         <paper-input id="addressLine2" name="addressLine2" label="Address Line2" class="reg" bind-value="{{addressLine2}}"></paper-input>
 
-        <paper-input id="city" auto-validate required pattern="[^-\s]{1,}" error-message="{{cityerror}}" name="city" label="Town / City" class="reg" bind-value="{{city}}"></paper-input>
+        <paper-input id="city" name="city" label="Town / City" class="reg" bind-value="{{city}}"></paper-input>
 
         <paper-input id="state" name="state" label="County" class="reg" bind-value="{{state}}"></paper-input>
 
-        <paper-input id="postalCode" name="postalCode" auto-validate required pattern="[0-9]{1,5}" error-message="{{postalcodeerror}}" label="Postal Code" class="reg" bind-value="{{postalCode}}"></paper-input>
-        
-        <countries-dropdown selection={{countrySelection}}></countries-dropdown>
+        <paper-input id="postalCode" name="postalCode" label="Postal Code" class="reg" bind-value="{{postalCode}}"></paper-input>
+
+        <apollo-countries-dropdown selection={{countrySelection}}></apollo-countries-dropdown>
+
+        <iron-ajax id="addressService" url="http://localhost:8082/api/address/list" 
+         handle-as="json" on-response="_searchResponse" debounce-duration="300"></iron-ajax>
 
     </template>
     <script>
     Polymer({
         is: "apollo-validated-address",
 
-        behaviors: [
-            Polymer.IronValidatorBehavior
-        ],
         properties: {
-            addressline1error: {
+
+            searched: {
                 type: String,
-                value: ''
+                observer: '_searchChanged'
             },
-            cityerror: {
-                type: String,
-                value: ''
-            },
-            postalcodeerror: {
-                type: String,
-                value: ''
-            },
-             addressLine1: {
+            addressLine1: {
                 type: String,
                 notify: true
             },
-             addressLine2: {
+            addressLine2: {
                 type: String
             },
-             city: {
+            city: {
                 type: String
             },
-             state: {
+            state: {
                 type: String
             },
-             postalCode: {
+            postalCode: {
                 type: String
             },
-             countrySelection: {
+            countrySelection: {
                 type: String
+            },
+            foundAddress: {
+                type: Array,
+                notify: true
             }
+        },
+
+        _searchChanged: function(newValue, oldValue) {
+            console.log(newValue);
+            var service = document.querySelector('#addressService');
+            service.generateRequest();
+        },
+
+        _searchResponse: function(e, res) {
+            console.log(res.parseResponse());
+            this.foundAddress = res.parseResponse();    
         }
+
+
     });
     </script>
 </dom-module>
-
