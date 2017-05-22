@@ -55,6 +55,8 @@ Polymer component that validates the entered address
 
         <iron-ajax id="addressService" url="http://127.0.0.1:8082/api/address/list" handle-as="json" on-response="_searchResponse" debounce-duration="300" method="POST" content-type="application/json" body="{{query}}"></iron-ajax>
 
+        <iron-ajax id="addressFormatService" url="http://127.0.0.1:8082/api/address/id/[[selectedId]]" handle-as="json" on-response="_addressFormatResponse" debounce-duration="300" method="GET" content-type="application/json"></iron-ajax>
+
     </template>
     <script>
     Polymer({
@@ -88,6 +90,9 @@ Polymer component that validates the entered address
             foundAddress: {
                 type: Array,
                 notify: true
+            },
+            selectedId: {
+                type: String
             },
             query: {
                 type: String,
@@ -124,12 +129,20 @@ Polymer component that validates the entered address
 
         _searchSelected: function(event) {
             var item = event.detail.option;
-            console.log("selected -> " + event.detail.option.city);
+            console.log("selected -> " + event.detail.option.formatId);
 
-            this.addressLine1 = item.addressLine1;
-            this.addressLine2 = item.addressLine2;
-            this.city = item.city;
-            this.state = item.state;
+            this.selectedId = event.detail.option.formatId;
+            var service = document.querySelector('#addressFormatService');
+            service.generateRequest();
+        },
+
+        _addressFormatResponse: function(e, res) {
+            var obj = res.parseResponse();
+            console.log(obj.addressLine1);
+
+            this.addressLine1 = obj.addressLine1;
+            this.addressLine2 = obj.addressLine2;
+            this.city = obj.town;
         }
 
     });
