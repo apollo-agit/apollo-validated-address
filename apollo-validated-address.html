@@ -4,6 +4,7 @@
 <link rel="import" href="/bower_components/iron-validator-behavior/iron-validator-behavior.html">
 <link rel="import" href="/bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="/bower_components/iron-dropdown/iron-dropdown.html">
+<link rel="import" href="/bower_components/paper-autocomplete/paper-autocomplete.html">
 <link rel="import" href="apollo-address-validator.html">
 <link rel="import" href="apollo-countries-dropdown.html">
 
@@ -21,31 +22,33 @@ Polymer component that validates the entered address
 
         <apollo-address-validator></apollo-address-validator>
 
-        <paper-input id="search" auto-validate validator="apollo-address-validator" name="search" label="Address Search" bind-value="{{searched}}"></paper-input>
+        <paper-autocomplete label="Select User" id="input-remote" remote-source="true" min-length="3" remote-source="true">
 
-         
-                <ul class="dropdown-content" tabindex="0">
-                <template is="dom-repeat" items="[[foundAddress]]">
-                    <li><a href="javascript:void(0)">[[item.city]]</a></li>
-                </template>
-          </ul>
-        
+            <template autocomplete-custom-template>
+                <paper-item on-tap="_onSelect" id$="[[_getSuggestionId(index)]]" role="option" aria-selected="false">
+                    <div>
+                        <div>[[item.addressLine1]]</div>
+                        <div>[[item.addressLine2]]</div>
+                        <div>[[item.city]],[[item.state]]</div>
+                    </div>
+                    <paper-ripple></paper-ripple>
+                </paper-item>
+            </template>
+        </paper-autocomplete>
 
+        <paper-input id="addressLine1" name="addressLine1" label="Address Line1" value="{{addressLine1}}"></paper-input>
 
-        <paper-input id="addressLine1" name="addressLine1" label="Address Line1" bind-value="{{addressLine1}}"></paper-input>
+        <paper-input id="addressLine2" name="addressLine2" label="Address Line2" class="reg" value="{{addressLine2}}"></paper-input>
 
-        <paper-input id="addressLine2" name="addressLine2" label="Address Line2" class="reg" bind-value="{{addressLine2}}"></paper-input>
+        <paper-input id="city" name="city" label="Town / City" class="reg" value="{{city}}"></paper-input>
 
-        <paper-input id="city" name="city" label="Town / City" class="reg" bind-value="{{city}}"></paper-input>
+        <paper-input id="state" name="state" label="County" class="reg" value="{{state}}"></paper-input>
 
-        <paper-input id="state" name="state" label="County" class="reg" bind-value="{{state}}"></paper-input>
-
-        <paper-input id="postalCode" name="postalCode" label="Postal Code" class="reg" bind-value="{{postalCode}}"></paper-input>
+        <paper-input id="postalCode" name="postalCode" label="Postal Code" class="reg" value="{{postalCode}}"></paper-input>
 
         <apollo-countries-dropdown selection={{countrySelection}}></apollo-countries-dropdown>
 
-        <iron-ajax id="addressService" url="http://localhost:8082/api/address/list" 
-         handle-as="json" on-response="_searchResponse" debounce-duration="300"></iron-ajax>
+        <iron-ajax id="addressService" url="http://localhost:8082/api/address/list" handle-as="json" on-response="_searchResponse" debounce-duration="300"></iron-ajax>
 
     </template>
     <script>
@@ -83,17 +86,31 @@ Polymer component that validates the entered address
             }
         },
 
-        _searchChanged: function(newValue, oldValue) {
-            console.log(newValue);
+        listeners: {
+            'autocomplete-change': '_searchChanged',
+            'autocomplete-selected': '_searchSelected'
+        },
+
+        _searchChanged: function(event) {
+            console.log("onSearchChanged");
+            console.log(event);
             var service = document.querySelector('#addressService');
             service.generateRequest();
         },
 
         _searchResponse: function(e, res) {
             console.log(res.parseResponse());
-            this.foundAddress = res.parseResponse();    
-        }
+            this.foundAddress = res.parseResponse();
+            document.querySelector('#input-remote').suggestions(this.foundAddress);
+        },
 
+        _searchSelected: function(event) {
+            console.log("selected -> " + event.detail.option.city);
+            this.addressLine1 = event.detail.option.addressLine1;
+            this.addressLine2 = event.detail.option.addressLine2;
+            this.city = event.detail.option.city;
+            this.state = event.detail.option.state;
+        }
 
     });
     </script>
