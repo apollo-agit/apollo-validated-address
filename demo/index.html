@@ -1,23 +1,39 @@
 <!doctype html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
 
     <title>apollo-validated-address demo</title>
 
     <script src="../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="import" href="/bower_components/iron-demo-helpers/demo-snippet.html">
     <link rel="import" href="../apollo-validated-address.html">
 
-    <style is="custom-style" include="demo-pages-shared-styles">
+    <style>
+    .centered {
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    apollo-validated-address {
+        width: 500px;
+        width: 100%;
+    }
     </style>
-  </head>
-  <body>
+</head>
+
+<body>
     <div class="vertical-section-container centered">
-      <h3>Basic apollo-validated-address demo</h3>
-      <demo-snippet>
-          <apollo-validated-address></apollo-validated-address>
-      </demo-snippet>
+        <h3>Basic apollo-validated-address demo</h3>
+        <demo-snippet>
+            <div class="centered">
+                <apollo-validated-address></apollo-validated-address>
+            </div>
+        </demo-snippet>
     </div>
-  </body>
+</body>
+
 </html>

@@ -20,10 +20,35 @@
 
     <script>
       suite('apollo-validated-address', function() {
-        test('instantiating the element works', function() {
-          var element = fixture('basic');
-          assert.equal(element.is, 'apollo-validated-address');
+        var el;
+        setup(function() {
+          el = fixture('basic');
+
+          stub('apollo-validated-address', {
+            _searchSelected: function() {
+              alert("here");
+            }
+          });
+
         });
+
+        test('instantiating the element works', function() {
+          assert.equal(el.is, 'apollo-validated-address');
+        });
+
+        test('find apollo countries has initial value', function() {
+          assert.equal(el.countrySelection, 'GBR');
+        });
+
+        test('enter 690 into search box', function() {
+          console.log("here is my log");
+          var input = document.getElementById('input-remote');
+          input.value = '690';
+          debugger
+          assert.equal(input.is, 'paper-autocomplete');
+//          assert.equal(el.query, 'addressLine1: 690');
+        });
+
       });
     </script>
   </body>
