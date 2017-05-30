@@ -6,7 +6,7 @@
 <link rel="import" href="/bower_components/iron-validator-behavior/iron-validator-behavior.html">
 <link rel="import" href="/bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="/bower_components/iron-dropdown/iron-dropdown.html">
-<link rel="import" href="/bower_components/paper-autocomplete/paper-autocomplete.html">
+<link rel="import" href="/bower_components/paper-autocomplete/paper-autocomplete-suggestions.html">
 <link rel="import" href="/bower_components/paper-card/paper-card.html">
 <link rel="import" href="apollo-address-validator.html">
 <link rel="import" href="apollo-countries-dropdown.html">
@@ -25,56 +25,36 @@ Polymer component that validates the entered address
             margin-bottom: .5em;
             width: 100%;
         }
-        
-        .address-card {
-            max-width: 500px;
-            width: 100%;
-        }
-        
-        :root {
-            --primary-color: var(--paper-grey-200);
-            --accent-color: var(--paper-blue-500);
-            --paper-card-header-color: var(--primary-color);
-            --paper-card-header: {
-                background-color: var(--accent-color);
-                text-align: center;
-            }
-            .address-card {
-                background: --primary-color;
-            }
-        }
         </style>
         <apollo-address-validator></apollo-address-validator>
 
-        <paper-card class="address-card" heading="Apoll Address Validation">
+        <apollo-countries-dropdown selection={{selectedAddress.country}} id="apollo-countries"></apollo-countries-dropdown>
 
-            <div class="card-content">
+        <paper-input id="addressSearch" label="Search Address" bind-value={{addressSearchVal}}></paper-input>
 
-                <apollo-countries-dropdown selection={{countrySelection}} id="apollo-countries"></apollo-countries-dropdown>
-
-                <paper-autocomplete label="Address Search" id="input-remote" remote-source="true" min-length="3" remote-source="true">
-                    <template autocomplete-custom-template>
-                        <paper-card class="selection-card">
-                            <div class="card-content">
-                                <paper-item on-tap="_onSelect" id$="[[_getSuggestionId(index)]]" role="option" aria-selected="false">
-                                    <div>
-                                        <div>[[item.suggest]]</div>
-                                    </div>
-                                    <paper-ripple></paper-ripple>
-                                </paper-item>
+        <paper-autocomplete-suggestions for="addressSearch" label="Address Search" id="input-remote" remote-source="true" min-length="3" remote-source="true">
+            <template autocomplete-custom-template>
+                <paper-card class="selection-card">
+                    <div class="card-content">
+                        <paper-item on-tap="_onSelect" id$="[[_getSuggestionId(index)]]" role="option" aria-selected="false">
+                            <div>
+                                <div>[[item.suggest]]</div>
                             </div>
-                        </paper-card>
-                    </template>
-                </paper-autocomplete>
+                            <paper-ripple></paper-ripple>
+                        </paper-item>
+                    </div>
+                </paper-card>
+            </template>
+        </paper-autocomplete-suggestions>
 
-                <paper-input id="addressLine1" name="addressLine1" label="Address Line1" value="{{addressLine1}}"></paper-input>
+        <paper-input id="addressLine1" name="addressLine1" label="Address Line1" value="{{selectedAddress.addressLine1}}"></paper-input>
 
-                <paper-input id="addressLine2" name="addressLine2" label="Address Line2" class="reg" value="{{addressLine2}}"></paper-input>
+        <paper-input id="addressLine2" name="addressLine2" label="Address Line2" class="reg" value="{{selectedAddress.addressLine2}}"></paper-input>
 
-                <paper-input id="city" name="city" label="Town / City" class="reg" value="{{city}}"></paper-input>
+        <paper-input id="city" name="city" label="Town / City" class="reg" value="{{selectedAddress.city}}"></paper-input>
 
-                <paper-input id="postalCode" name="postalCode" label="Postal Code" class="reg" value="{{postalCode}}"></paper-input>
-            </div>
+        <paper-input id="postalCode" name="postalCode" label="Postal Code" class="reg" value="{{selectedAddress.zipcode}}"></paper-input>
+        </div>
         </paper-card>
 
         <iron-ajax id="addressService" url="http://127.0.0.1:8082/api/address/list" handle-as="json" on-response="_searchResponse" debounce-duration="300" method="POST" content-type="application/json" body="{{query}}"></iron-ajax>
@@ -87,62 +67,57 @@ Polymer component that validates the entered address
         is: "apollo-validated-address",
 
         properties: {
+            /**
+            * The address search field entry
+            * which will be parsed for query side effect
+            */
+            addressSearchVal: String,
 
             /**
-            * The input of Address Line 1
-            */
-            addressLine1: {
-                type: String
-            },
-             /**
-            * The input of Address Line 2
-            */
-            addressLine2: {
-                type: String
-            },
-             /**
-            * The input of Address City
-            */
-            city: {
-                type: String
-            },
-            /**
-            * The input of Address Postal Code
-            */
-            postalCode: {
-                type: String
-            },
-            /**
-            * The selected country (default GBR)
-            */
-            countrySelection: {
-                type: String,
-                value: 'GBR'
-            },
-            /**
-            * The array of found address returned from
-            * search api
-            */
+             * The array of found address returned from
+             * search api
+             */
             foundAddress: {
                 type: Array,
                 notify: true
             },
             /**
-            * The guid of the address that was selected
-            * from teh auto-complete input which will be
-            * used to retreive the address details
-            */
+             * The guid of the address that was selected
+             * from teh auto-complete input which will be
+             * used to retreive the address details
+             */
             selectedId: {
                 type: String
             },
             /*
-            * The query for the address auto-complete
-            * suggestion lookup
-            */
+             * The query for the address auto-complete
+             * suggestion lookup
+             */
             query: {
                 type: String,
                 notify: false,
                 reflectToAttribute: false
+            },
+            /**
+             * Object data for notifying DOM
+             * with the user slected address which 
+             * should be caught by the Root DOM or any sybling
+             * Shadow DOMs
+             */
+            selectedAddress: {
+                type: Object,
+                notify: true,
+                reflectToAttribute: true,
+                observer: '_notifyAddressSelected',
+                value: function() {
+                    return {
+                        addressLine1: '',
+                        addressLine2: '',
+                        city: '',
+                        country: 'GBR',
+                        zipcode: ''
+                    };
+                }
             }
         },
 
@@ -152,10 +127,19 @@ Polymer component that validates the entered address
         },
 
         /**
-        * A listener callback when the search input
-        * recieves text and should be called on 
-        * each keystroke there after
-        */
+         * Method is called to fire the 'addressSelectedEvent'
+         * and pass 'selectedAddress' and  
+         * will notify the DOM
+         */
+        _notifyAddressSelected() {
+            this.fire('addressSelectedEvent', this.selectedAddress);
+        },
+
+        /**
+         * A listener callback when the search input
+         * recieves text and should be called on 
+         * each keystroke there after
+         */
         _searchChanged: function(event) {
             var obj = {
                 suggestionQuery: event.detail.text
@@ -167,19 +151,19 @@ Polymer component that validates the entered address
         },
 
         /**
-        * Side effect callback that receives suggestions
-        * based on the input query 
-        */
+         * Side effect callback that receives suggestions
+         * based on the input query 
+         */
         _searchResponse: function(e, res) {
             this.foundAddress = res.parseResponse();
             document.querySelector('#input-remote').suggestions(this.foundAddress);
         },
 
         /**
-        * Listener callback when the suggestion is selected
-        * which will capture the suggestion id and 
-        * make a detail service call
-        */
+         * Listener callback when the suggestion is selected
+         * which will capture the suggestion id and 
+         * make a detail service call
+         */
         _searchSelected: function(event) {
             this.selectedId = event.detail.option.formatId;
 
@@ -188,17 +172,12 @@ Polymer component that validates the entered address
         },
 
         /**
-        * The callback for the service address 
-        * details which in turn populates
-        * the corresponding address fields
-        */
+         * The callback for the service address 
+         * details which in turn populates
+         * the corresponding address fields
+         */
         _addressFormatResponse: function(e, res) {
-            var obj = res.parseResponse();
-
-            this.addressLine1 = obj.addressLine1;
-            this.addressLine2 = obj.addressLine2;
-            this.city = obj.town;
-            this.postalCode = obj.postCode;
+            this.selectedAddress = res.parseResponse();
         }
 
     });

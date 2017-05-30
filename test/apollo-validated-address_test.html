@@ -8,48 +8,71 @@
 
     <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
     <script src="../../web-component-tester/browser.js"></script>
+    <link rel="import" href="/bower_components/polymer/polymer.html">
+    <link rel="import" href="/bower_components/iron-ajax/iron-ajax.html">
 
     <link rel="import" href="../apollo-validated-address.html">
   </head>
   <body>
-    <test-fixture id="basic">
+    <test-fixture id="apollo-validated-address-fixture">
       <template>
         <apollo-validated-address></apollo-validated-address>
       </template>
     </test-fixture>
 
     <script>
-      suite('apollo-validated-address', function() {
+ 
+      suite('<apollo-validated-address>', function() {
         var el;
-        setup(function() {
-          el = fixture('basic');
+        var ajax;
+        var server;
+        var responseHeaders = {
+          json: { 'Content-Type': 'application/json'}
+        };
 
-          stub('apollo-validated-address', {
-            _searchSelected: function() {
-              alert("here");
-            }
-          });
+        setup(function() {
+          el = fixture('apollo-validated-address-fixture');
+          server = sinon.fakeServer.create();
+
+          server.respondWith(
+            'GET',
+            'http://127.0.0.1:8082/api/address/list', [
+              200,
+              responseHeaders.json,
+              '[{"suggest": "690 King Street, Aberdeen, AB24 ...","formatId": "AVwvmWPyOvv0jhfFNA5O_U40_24_0_0_0%3D690"}]'
+            ]);
 
         });
 
-        test('instantiating the element works', function() {
+        teardown(function() {
+          server.restore();
+        });
+
+        test('making ajax request for list', function() {
+            var ajax = Polymer.dom(el.root).querySelector("#addressService");
+            assert.equal(ajax.is, 'iron-ajaxs');
+
+//           request = ajax.generateRequest();
+//          server.respond();
+//           expect(request.response).to.be.ok;
+
+        });
+
+        test('instantiating the element exits', function() {
           assert.equal(el.is, 'apollo-validated-address');
         });
 
         test('find apollo countries has initial value', function() {
-          assert.equal(el.countrySelection, 'GBR');
+          assert.equal(el.selectedAddress.country, 'GBR');
         });
 
         test('enter 690 into search box', function() {
-          console.log("here is my log");
-          var input = document.getElementById('input-remote');
-          input.value = '690';
-          debugger
-          assert.equal(input.is, 'paper-autocomplete');
-//          assert.equal(el.query, 'addressLine1: 690');
+
         });
 
       });
+
+
     </script>
   </body>
 </html>
