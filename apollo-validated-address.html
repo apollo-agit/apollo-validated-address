@@ -28,7 +28,6 @@ Polymer component that validates the entered address
             margin-bottom: .5em;
             width: 100%;
         }
-
  
         </style>
         <apollo-address-validator></apollo-address-validator>
@@ -41,7 +40,7 @@ Polymer component that validates the entered address
         </paper-input>
 
         <paper-autocomplete-suggestions for="addressSearch" label="Address Search" id="input-remote" remote-source="true" min-length="3" remote-source="true">
-            <template autocomplete-custom-template>
+            <template autocomplete-custom-template id="autocompletediv">
                 <paper-card class="selection-card">
                     <div class="card-content">
                         <paper-item on-tap="_onSelect" id$="[[_getSuggestionId(index)]]" role="option" aria-selected="false">
@@ -64,9 +63,11 @@ Polymer component that validates the entered address
 
         <iron-collapse id="collapse" opened="{{opened}}" tabindex="0">
       
-            <paper-input id="addressLine1" name="addressLine1" label="Address Line1" value="{{selectedAddress.addressLine1}}" readonly$="{{readOnly}}"></paper-input>
+            <paper-input id="addressLine1" name="addressLine1" label="Address Line 1" value="{{selectedAddress.addressLine1}}" readonly$="{{readOnly}}"></paper-input>
 
-            <paper-input id="addressLine2" name="addressLine2" label="Address Line2" class="reg" value="{{selectedAddress.addressLine2}}" readonly$="{{readOnly}}"></paper-input>
+            <paper-input id="addressLine2" name="addressLine2" label="Address Line 2" class="reg" value="{{selectedAddress.addressLine2}}" readonly$="{{readOnly}}"></paper-input>
+
+            <paper-input id="addressLine3" name="addressLine3" label="Address Line 3" class="reg" value="{{selectedAddress.addressLine3}}" readonly$="{{readOnly}}"></paper-input>
 
             <paper-input id="city" name="city" label="Town / City" class="reg" value="{{selectedAddress.city}}" readonly$="{{readOnly}}"></paper-input>
 
@@ -84,10 +85,6 @@ Polymer component that validates the entered address
     <script>
     Polymer({
         is: "apollo-validated-address",
-
-        behaviors: [
-            Polymer.PaperInputBehavior
-        ],
 
         properties: {
             /**
@@ -158,6 +155,7 @@ Polymer component that validates the entered address
                     return {
                         addressLine1: '',
                         addressLine2: '',
+                        addressLine3: '',
                         city: '',
                         country: 'GBR',
                         zipcode: ''
@@ -229,6 +227,7 @@ Polymer component that validates the entered address
             this.opened = true;
 
             this.selectedAddress = res.parseResponse();
+            this.$.addressSearch.focus();
         },
 
         /**
