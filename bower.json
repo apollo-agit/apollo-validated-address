@@ -14,7 +14,9 @@
     "paper-listbox": "^2.0.0",
     "iron-ajax": "^2.0.0",
     "paper-autocomplete": "^2.5.2",
-    "paper-card": "PolymerElements/paper-card#^2.0.0"
+    "paper-card": "PolymerElements/paper-card#^2.0.0",
+    "iron-collapse": "^2.0.0",
+    "paper-button": "^2.0.0"
   },
   "devDependencies": {
     "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",

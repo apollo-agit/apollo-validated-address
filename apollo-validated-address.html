@@ -3,8 +3,10 @@
 <link rel="import" href="/bower_components/polymer/polymer.html">
 <link rel="import" href="/bower_components/paper-styles/color.html">
 <link rel="import" href="/bower_components/paper-input/paper-input.html">
+<link rel="import" href="/bower_components/paper-button/paper-button.html">
 <link rel="import" href="/bower_components/iron-validator-behavior/iron-validator-behavior.html">
 <link rel="import" href="/bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="/bower_components/iron-collapse/iron-collapse.html">
 <link rel="import" href="/bower_components/iron-dropdown/iron-dropdown.html">
 <link rel="import" href="/bower_components/paper-autocomplete/paper-autocomplete-suggestions.html">
 <link rel="import" href="/bower_components/paper-card/paper-card.html">
@@ -21,16 +23,22 @@ Polymer component that validates the entered address
 <dom-module id="apollo-validated-address" id="Address">
     <template>
         <style>
-        .selection-card {
+
+          .selection-card {
             margin-bottom: .5em;
             width: 100%;
         }
+
+ 
         </style>
         <apollo-address-validator></apollo-address-validator>
 
         <apollo-countries-dropdown selection={{selectedAddress.country}} id="apollo-countries"></apollo-countries-dropdown>
 
-        <paper-input id="addressSearch" label="Search Address" bind-value={{addressSearchVal}}></paper-input>
+        <paper-input id="addressSearch" label="Search Address" class="search" value={{addressSearchVal}} hidden$="{{hideSearch}}">
+             <iron-icon icon="search" slot="prefix" ></iron-icon>
+        <paper-icon-button class="clear-button" icon="backspace" on-tap="clear"></paper-icon-button>
+        </paper-input>
 
         <paper-autocomplete-suggestions for="addressSearch" label="Address Search" id="input-remote" remote-source="true" min-length="3" remote-source="true">
             <template autocomplete-custom-template>
@@ -45,17 +53,28 @@ Polymer component that validates the entered address
                     </div>
                 </paper-card>
             </template>
+        <div>
+            
+        </div>
         </paper-autocomplete-suggestions>
 
-        <paper-input id="addressLine1" name="addressLine1" label="Address Line1" value="{{selectedAddress.addressLine1}}"></paper-input>
-
-        <paper-input id="addressLine2" name="addressLine2" label="Address Line2" class="reg" value="{{selectedAddress.addressLine2}}"></paper-input>
-
-        <paper-input id="city" name="city" label="Town / City" class="reg" value="{{selectedAddress.city}}"></paper-input>
-
-        <paper-input id="postalCode" name="postalCode" label="Postal Code" class="reg" value="{{selectedAddress.zipcode}}"></paper-input>
+        <div id="notFound" hidden$="{{hideNotFound}}">
+            <paper-button toggles raised on-click="_manualAddress">Address Not Found</paper-button>
         </div>
-        </paper-card>
+
+        <iron-collapse id="collapse" opened="{{opened}}" tabindex="0">
+      
+            <paper-input id="addressLine1" name="addressLine1" label="Address Line1" value="{{selectedAddress.addressLine1}}" readonly$="{{readOnly}}"></paper-input>
+
+            <paper-input id="addressLine2" name="addressLine2" label="Address Line2" class="reg" value="{{selectedAddress.addressLine2}}" readonly$="{{readOnly}}"></paper-input>
+
+            <paper-input id="city" name="city" label="Town / City" class="reg" value="{{selectedAddress.city}}" readonly$="{{readOnly}}"></paper-input>
+
+            <paper-input id="postalCode" name="postalCode" label="Postal Code" class="reg" value="{{selectedAddress.zipcode}}" readonly$="{{readOnly}}"></paper-input>
+            </div>
+
+ 
+        </iron-collapse>
 
         <iron-ajax id="addressService" url="http://127.0.0.1:8082/api/address/list" handle-as="json" on-response="_searchResponse" debounce-duration="300" method="POST" content-type="application/json" body="{{query}}"></iron-ajax>
 
@@ -65,6 +84,10 @@ Polymer component that validates the entered address
     <script>
     Polymer({
         is: "apollo-validated-address",
+
+        behaviors: [
+            Polymer.PaperInputBehavior
+        ],
 
         properties: {
             /**
@@ -98,6 +121,28 @@ Polymer component that validates the entered address
                 notify: false,
                 reflectToAttribute: false
             },
+
+            opened: {
+                type: Boolean,
+                value: false
+            },
+
+
+            hideNotFound: {
+                type: Boolean,
+                value: true
+            },
+
+            hideSearch: {
+                type: Boolean,
+                value: false
+            },
+
+            readOnly: {
+                type: Boolean,
+                value: true
+            },
+
             /**
              * Object data for notifying DOM
              * with the user slected address which 
@@ -141,6 +186,8 @@ Polymer component that validates the entered address
          * each keystroke there after
          */
         _searchChanged: function(event) {
+            this.hideNotFound = false;
+
             var obj = {
                 suggestionQuery: event.detail.text
             };
@@ -177,7 +224,22 @@ Polymer component that validates the entered address
          * the corresponding address fields
          */
         _addressFormatResponse: function(e, res) {
+            this.hideNotFound = true;
+            this.addressSearchVal = '';
+            this.opened = true;
+
             this.selectedAddress = res.parseResponse();
+        },
+
+        /**
+        * This function fires when user cannot find address
+        * and needs to manually update the address fields
+        */
+        _manualAddress: function() {
+            this.opened = true;
+            this.hideSearch = true;
+            this.hideNotFound = true;
+            this.readOnly = false;
         }
 
     });
